@@ -1030,5 +1030,10 @@
         "highlights": "Highlights",
         "lists": "Lists",
         "tags": "Tags"
+    },
+    "keenetic": {
+        "cpu": "CPU",
+        "upTime": "Uptime",
+        "memory": "RAM"
     }
 }

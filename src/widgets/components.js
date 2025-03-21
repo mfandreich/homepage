@@ -59,6 +59,7 @@ const components = {
   jellyfin: dynamic(() => import("./emby/component")),
   jellyseerr: dynamic(() => import("./jellyseerr/component")),
   kavita: dynamic(() => import("./kavita/component")),
+  keenetic: dynamic(() => import("./keenetic/component")),
   komga: dynamic(() => import("./komga/component")),
   kopia: dynamic(() => import("./kopia/component")),
   lidarr: dynamic(() => import("./lidarr/component")),

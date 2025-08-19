@@ -1,8 +1,8 @@
 import { searchProviders } from "components/widgets/search/search";
 
 import { getSettings } from "utils/config/config";
-import cachedFetch from "utils/proxy/cached-fetch";
 import { widgetsFromConfig } from "utils/config/widget-helpers";
+import { cachedRequest } from "utils/proxy/http";
 
 export default async function handler(req, res) {
   const { query, providerName } = req.query;
@@ -29,5 +29,5 @@ export default async function handler(req, res) {
     return res.json([query, []]); // Responde with the same array format but with no suggestions.
   }
 
-  return res.send(await cachedFetch(`${provider.suggestionUrl}${encodeURIComponent(query)}`, 5, "Mozilla/5.0"));
+  return res.send(await cachedRequest(`${provider.suggestionUrl}${encodeURIComponent(query)}`, 5, "Mozilla/5.0"));
 }

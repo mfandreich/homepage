@@ -1,6 +1,6 @@
-import { useTranslation } from "next-i18next";
-import Container from "components/services/widget/container";
 import Block from "components/services/widget/block";
+import Container from "components/services/widget/container";
+import { useTranslation } from "next-i18next";
 
 import QueueEntry from "../../components/widgets/queue/queueEntry";
 
@@ -45,6 +45,25 @@ export default function Component({ service }) {
   }
 
   const leech = torrentData.length - completed;
+  const statePriority = [
+    "downloading",
+    "forcedDL",
+    "metaDL",
+    "forcedMetaDL",
+    "checkingDL",
+    "stalledDL",
+    "queuedDL",
+    "pausedDL",
+  ];
+
+  leechTorrents.sort((firstTorrent, secondTorrent) => {
+    const firstStateIndex = statePriority.indexOf(firstTorrent.state);
+    const secondStateIndex = statePriority.indexOf(secondTorrent.state);
+    if (firstStateIndex !== secondStateIndex) {
+      return firstStateIndex - secondStateIndex;
+    }
+    return secondTorrent.progress - firstTorrent.progress;
+  });
 
   return (
     <>

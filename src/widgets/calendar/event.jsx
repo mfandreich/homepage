@@ -1,20 +1,15 @@
-import { useState } from "react";
-import { useTranslation } from "next-i18next";
-import { DateTime } from "luxon";
 import classNames from "classnames";
+import { DateTime } from "luxon";
+import { useTranslation } from "next-i18next";
+import { useState } from "react";
 import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 
 export default function Event({ event, colorVariants, showDate = false, showTime = false, showDateColumn = true }) {
   const [hover, setHover] = useState(false);
   const { i18n } = useTranslation();
 
-  return (
-    <div
-      className="flex flex-row text-theme-700 dark:text-theme-200 items-center text-xs relative h-5 w-full rounded-md bg-theme-200/50 dark:bg-theme-900/20 mt-1"
-      onMouseEnter={() => setHover(!hover)}
-      onMouseLeave={() => setHover(!hover)}
-      key={`event-${event.title}-${event.date}-${event.additional}`}
-    >
+  const children = (
+    <>
       {showDateColumn && (
         <span className="ml-2 w-12">
           <span>
@@ -36,6 +31,26 @@ export default function Event({ event, colorVariants, showDate = false, showTime
           <IoMdCheckmarkCircleOutline />
         </span>
       )}
+    </>
+  );
+  const className =
+    "flex flex-row text-theme-700 dark:text-theme-200 items-center text-xs relative h-5 w-full rounded-md bg-theme-200/50 dark:bg-theme-900/20 mt-1";
+  const key = `event-${event.title}-${event.date}-${event.additional}`;
+  return event.url ? (
+    <a
+      className={classNames(className, "hover:bg-theme-300/50 dark:hover:bg-theme-800/20")}
+      onMouseEnter={() => setHover(!hover)}
+      onMouseLeave={() => setHover(!hover)}
+      key={key}
+      href={event.url}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      {children}
+    </a>
+  ) : (
+    <div className={className} onMouseEnter={() => setHover(!hover)} onMouseLeave={() => setHover(!hover)} key={key}>
+      {children}
     </div>
   );
 }

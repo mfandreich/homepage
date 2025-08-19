@@ -1,31 +1,31 @@
 /* eslint-disable react/no-array-index-key */
-import useSWR, { SWRConfig } from "swr";
-import Head from "next/head";
-import Script from "next/script";
-import dynamic from "next/dynamic";
 import classNames from "classnames";
-import { useTranslation } from "next-i18next";
-import { useEffect, useContext, useState, useMemo } from "react";
-import { BiError } from "react-icons/bi";
-import { serverSideTranslations } from "next-i18next/serverSideTranslations";
-import { useRouter } from "next/router";
-import Tab, { slugifyAndEncode } from "components/tab";
-import ServicesGroup from "components/services/group";
 import BookmarksGroup from "components/bookmarks/group";
-import Widget from "components/widgets/widget";
-import Revalidate from "components/toggles/revalidate";
-import { ColorContext } from "utils/contexts/color";
-import { ThemeContext } from "utils/contexts/theme";
-import { SettingsContext } from "utils/contexts/settings";
-import { TabContext } from "utils/contexts/tab";
 import ErrorBoundary from "components/errorboundry";
 import QuickLaunch from "components/quicklaunch";
+import ServicesGroup from "components/services/group";
+import Tab, { slugifyAndEncode } from "components/tab";
+import Revalidate from "components/toggles/revalidate";
+import Widget from "components/widgets/widget";
+import { useTranslation } from "next-i18next";
+import { serverSideTranslations } from "next-i18next/serverSideTranslations";
+import dynamic from "next/dynamic";
+import Head from "next/head";
+import { useRouter } from "next/router";
+import Script from "next/script";
+import { useContext, useEffect, useMemo, useState } from "react";
+import { BiError } from "react-icons/bi";
+import useSWR, { SWRConfig } from "swr";
+import { ColorContext } from "utils/contexts/color";
+import { SettingsContext } from "utils/contexts/settings";
+import { TabContext } from "utils/contexts/tab";
+import { ThemeContext } from "utils/contexts/theme";
 
 import { bookmarksResponse, servicesResponse, widgetsResponse } from "utils/config/api-response";
-import themes from "utils/styles/themes";
 import { getSettings } from "utils/config/config";
 import useWindowFocus from "utils/hooks/window-focus";
 import createLogger from "utils/logger";
+import themes from "utils/styles/themes";
 
 const ThemeToggle = dynamic(() => import("components/toggles/theme"), {
   ssr: false,
@@ -498,54 +498,63 @@ function Home({ initialSettings }) {
 }
 
 export default function Wrapper({ initialSettings, fallback }) {
-  const { themeContext } = useContext(ThemeContext);
-  const wrappedStyle = {};
+  const { theme } = useContext(ThemeContext);
+  let backgroundImage = "";
+  let opacity = initialSettings?.backgroundOpacity ?? 0;
   let backgroundBlur = false;
   let backgroundSaturate = false;
   let backgroundBrightness = false;
-  if (initialSettings && initialSettings.background) {
-    let opacity = initialSettings.backgroundOpacity ?? 1;
-    let backgroundImage = initialSettings.background;
-    if (typeof initialSettings.background === "object") {
-      backgroundImage = initialSettings.background.image;
-      backgroundBlur = initialSettings.background.blur !== undefined;
-      backgroundSaturate = initialSettings.background.saturate !== undefined;
-      backgroundBrightness = initialSettings.background.brightness !== undefined;
-      if (initialSettings.background.opacity !== undefined) opacity = initialSettings.background.opacity / 100;
+  if (initialSettings?.background) {
+    const bg = initialSettings.background;
+    if (typeof bg === "object") {
+      backgroundImage = bg.image || "";
+      if (bg.opacity !== undefined) {
+        opacity = 1 - bg.opacity / 100;
+      }
+      backgroundBlur = bg.blur !== undefined;
+      backgroundSaturate = bg.saturate !== undefined;
+      backgroundBrightness = bg.brightness !== undefined;
+    } else {
+      backgroundImage = bg;
     }
-    const opacityValue = 1 - opacity;
-    wrappedStyle.backgroundImage = `
-      linear-gradient(
-        rgb(var(--bg-color) / ${opacityValue}),
-        rgb(var(--bg-color) / ${opacityValue})
-      ),
-      url('${backgroundImage}')`;
-    wrappedStyle.backgroundPosition = "center";
-    wrappedStyle.backgroundSize = "cover";
   }
 
+  useEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+
+    html.classList.remove("dark", "scheme-dark", "scheme-light");
+    html.classList.toggle("dark", theme === "dark");
+    html.classList.add(theme === "dark" ? "scheme-dark" : "scheme-light");
+
+    html.classList.remove(...Array.from(html.classList).filter((cls) => cls.startsWith("theme-")));
+    html.classList.add(`theme-${initialSettings.color || "slate"}`);
+
+    // Remove any previously applied inline styles
+    body.style.backgroundImage = "";
+    body.style.backgroundColor = "";
+    body.style.backgroundAttachment = "";
+  }, [backgroundImage, opacity, theme, initialSettings.color]);
+
   return (
-    <div
-      id="page_wrapper"
-      className={classNames(
-        "relative",
-        initialSettings.theme && initialSettings.theme,
-        initialSettings.color && `theme-${initialSettings.color}`,
-        themeContext === "dark" ? "scheme-dark" : "scheme-light",
+    <>
+      {backgroundImage && (
+        <div
+          id="background"
+          aria-hidden="true"
+          style={{
+            backgroundImage: `linear-gradient(rgb(var(--bg-color) / ${opacity}), rgb(var(--bg-color) / ${opacity})), url('${backgroundImage}')`,
+          }}
+        />
       )}
-    >
-      <div
-        id="page_container"
-        className="fixed overflow-auto w-full h-full bg-theme-50 dark:bg-theme-800 transition-all"
-        style={wrappedStyle}
-      >
+      <div id="page_wrapper" className="relative h-full">
         <div
           id="inner_wrapper"
           tabIndex="-1"
           className={classNames(
-            "fixed overflow-auto w-full h-full",
+            "w-full h-full overflow-auto",
             backgroundBlur &&
-              `backdrop-blur${initialSettings.background.blur.length ? "-" : ""}${initialSettings.background.blur}`,
+              `backdrop-blur${initialSettings.background.blur?.length ? `-${initialSettings.background.blur}` : ""}`,
             backgroundSaturate && `backdrop-saturate-${initialSettings.background.saturate}`,
             backgroundBrightness && `backdrop-brightness-${initialSettings.background.brightness}`,
           )}
@@ -553,6 +562,6 @@ export default function Wrapper({ initialSettings, fallback }) {
           <Index initialSettings={initialSettings} fallback={fallback} />
         </div>
       </div>
-    </div>
+    </>
   );
 }
